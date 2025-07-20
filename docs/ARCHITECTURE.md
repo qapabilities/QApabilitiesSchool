@@ -28,7 +28,7 @@ O sistema QApabilities é uma aplicação de microsserviços desenvolvida em C# 
 ## Estrutura da Solução
 
 ```
-QApabilities/
+QApabilitiesSchool/
 ├── src/
 │   ├── Shared/                          # Biblioteca compartilhada
 │   │   └── QApabilities.Shared/

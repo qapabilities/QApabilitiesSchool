@@ -27,8 +27,8 @@ git --version
 
 ### 1. Clone o Repositório
 ```bash
-git clone <repository-url>
-cd QApabilities
+git clone https://github.com/qapabilities/QApabilitiesSchool.git
+cd QApabilitiesSchool
 ```
 
 ### 2. Configuração do Ambiente

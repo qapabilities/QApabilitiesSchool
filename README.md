@@ -29,7 +29,7 @@ Sistema de cadastro de alunos para a escola QApabilities implementado com arquit
 ## Estrutura do Projeto
 
 ```
-QApabilities/
+QApabilitiesSchool/
 ├── src/
 │   ├── Gateway/
 │   ├── Students/
@@ -56,8 +56,8 @@ QApabilities/
 
 ```bash
 # Clone o repositório
-git clone <repository-url>
-cd QApabilities
+git clone https://github.com/qapabilities/QApabilitiesSchool.git
+cd QApabilitiesSchool
 
 # Execute com Docker Compose
 docker-compose up -d
