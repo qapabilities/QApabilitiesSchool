@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qapabilities-config
+  namespace: qapabilities
+data:
+  # SQL Server Connection String
+  sqlserver-connection: "Server=qapabilities-sqlserver,1433;Database=QApabilitiesStudents;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;"
+  
+  # RabbitMQ Configuration
+  rabbitmq-host: "qapabilities-rabbitmq"
+  rabbitmq-port: "5672"
+  rabbitmq-username: "admin"
+  rabbitmq-password: "admin123"
+  
+  # Redis Configuration
+  redis-host: "qapabilities-redis"
+  redis-port: "6379"
+  
+  # API Configuration
+  api-timeout: "30"
+  api-retry-count: "3" 

@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qapabilities-sqlserver
+  namespace: qapabilities
+  labels:
+    app: qapabilities-sqlserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qapabilities-sqlserver
+  template:
+    metadata:
+      labels:
+        app: qapabilities-sqlserver
+    spec:
+      containers:
+      - name: sqlserver
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qapabilities-secrets
+              key: sqlserver-password
+        - name: MSSQL_PID
+          value: "Express"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: sqlserver-data
+          mountPath: /var/opt/mssql
+        livenessProbe:
+          exec:
+            command:
+            - /opt/mssql-tools/bin/sqlcmd
+            - -S
+            - localhost
+            - -U
+            - sa
+            - -P
+            - YourStrong@Passw0rd
+            - -Q
+            - SELECT 1
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - /opt/mssql-tools/bin/sqlcmd
+            - -S
+            - localhost
+            - -U
+            - sa
+            - -P
+            - YourStrong@Passw0rd
+            - -Q
+            - SELECT 1
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: sqlserver-data
+        persistentVolumeClaim:
+          claimName: sqlserver-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qapabilities-sqlserver
+  namespace: qapabilities
+spec:
+  selector:
+    app: qapabilities-sqlserver
+  ports:
+  - port: 1433
+    targetPort: 1433
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlserver-pvc
+  namespace: qapabilities
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi 

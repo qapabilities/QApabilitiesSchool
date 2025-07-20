@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: qapabilities-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - qapabilities-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: qapabilities-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - qapabilities-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: qapabilities-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - qapabilities-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Students API
+  students-api:
+    build:
+      context: ./src/Students
+      dockerfile: QApabilities.Students.API/Dockerfile
+    container_name: qapabilities-students-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=QApabilitiesStudents;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;
+    ports:
+      - "5001:5001"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - qapabilities-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Courses API (placeholder)
+  courses-api:
+    build:
+      context: ./src/Courses
+      dockerfile: QApabilities.Courses.API/Dockerfile
+    container_name: qapabilities-courses-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=QApabilitiesCourses;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;
+    ports:
+      - "5002:5002"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - qapabilities-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Enrollments API (placeholder)
+  enrollments-api:
+    build:
+      context: ./src/Enrollments
+      dockerfile: QApabilities.Enrollments.API/Dockerfile
+    container_name: qapabilities-enrollments-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=QApabilitiesEnrollments;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;
+    ports:
+      - "5003:5003"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - qapabilities-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway (placeholder)
+  gateway:
+    build:
+      context: ./src/Gateway
+      dockerfile: QApabilities.Gateway/Dockerfile
+    container_name: qapabilities-gateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:5000"
+    depends_on:
+      - students-api
+      - courses-api
+      - enrollments-api
+    networks:
+      - qapabilities-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  sqlserver_data:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  qapabilities-network:
+    driver: bridge 
